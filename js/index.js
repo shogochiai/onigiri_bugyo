@@ -2,11 +2,38 @@
     var milkcocoa = new MilkCocoa("https://io-ni5704e2j.mlkcca.com:443");
     var ds_proposals = milkcocoa.dataStore("proposals");
     var ds_members = milkcocoa.dataStore("members");
-    var ds_onigiris = milkcocoa.dataStore("onigiris");
+    var ds_orders = milkcocoa.dataStore("orders");
 
     // ユーザー一覧生成
     ds_members.query({}).done(function(users){
+        for(i=0; i++; i < users.length){
+            var each_user = users[i];
+            var prp_cls = "container--body--proposals";
+            var base_cls = prp_cls + "--" + each_user.fbid;
 
+            // おにぎりの具ボタンの表示について考える
+            // おにぎりの値段について考える
+            // おにぎりの合計個数について考える
+            // ordersを削除するタイミングについて考える
+            // fbに投稿するボタンについて考える
+
+            // メンバー表示
+            // 注文四tあおにぎりを表示する描画系が必要
+            $("."+prp_cls).append("<p class='"+base_cls+"'>" + each_user.name + "</p>");
+
+            // おにぎり選ぶボタン
+            $(".onigiri1").click(function(e){
+                ds_orders.push({ user_id : each_user.fbid, ingredient_id : 1 });
+            });
+
+            // 注文消すボタン
+            $("."+ng_cls).click(function(e){
+                ds_proposals.query({fbid: each_user.fbid}).done(function(target){
+                    ds_proposals.remove(target.id);
+                    $("."+base_cls).hide();
+                });
+            });
+        }
     });
 
     // ログインボタンとグループ申請送信
@@ -46,16 +73,23 @@
         });
     });
 
-    milkcocoa.getCurrentUser(function(err, data){
-        var mode = decodeURI(location.hash.substr(1));
+    milkcocoa.getCurrentUser(function(err, current_user){
+
+        var isLoggedIn = (err == null);
+        if (isLoggedIn) {
+            // ログインユーザーにだけチャットを許す
+            render_chat();
+        } else {
+        }
 
         // グループ管理者モード
+        var mode = decodeURI(location.hash.substr(1));
         if (mode == "shogo"){
-            var isShogo = (data.name == "Shogo Ochiai");
+            var isShogo = (current_user.name == "Shogo Ochiai");
             if(isShogo){
                 alert("Shogo mode :)");
                 ds_proposals.query({}).done(function(users){
-                    for(i=0; i++; i < data.length){
+                    for(i=0; i++; i < users.length){
                         var each_user = users[i];
                         var prp_cls = "container--body--proposals";
                         var base_cls = prp_cls + "--" + each_user.fbid;
@@ -69,15 +103,15 @@
 
                         // 承認
                         $("."+ok_cls).click(function(e){
-                            ds_proposals.query({fbid: data.fbid}).done(function(target){
+                            ds_proposals.query({fbid: each_user.fbid}).done(function(target){
                                 ds_members.push({ fbid : target.fbid, name : target.name });
                             });
                         });
 
                         // 拒否
                         $("."+ng_cls).click(function(e){
-                            ds_proposals.query({fbid: data.fbid}).done(function(target){
-                                ds_proposals.remove(targer.id);
+                            ds_proposals.query({fbid: each_user.fbid}).done(function(target){
+                                ds_proposals.remove(target.id);
                                 $("."+base_cls).hide();
                             });
                         });
@@ -88,27 +122,26 @@
               location.href = "http://"+location.host;
             }
         } else if (mode == "takenoshin"){
-            var isTakenoshin = (data.name == "Takenoshin Tokutsu");
+            var isTakenoshin = (current_user.name == "Takenoshin Tokutsu");
             if(isTakenoshin){
                 alert("Takenoshin mode :)");
                 $(".container--body").append("<button class='btn btn-danger container--body--accept'>accept onigiri!</button>");
                 $(".container--body--accept").click(function(e){
+                    // fbに投稿するボタンについて考える
                     render_accept_mode();
                 });
             } else {
               location.href = "http://"+location.host;
             }
         } else if (mode == "") {
+            ds_members.query({fbid:current_user.id}).done(function(target){
+                if(target){
+                    // おにぎりを注文できる処理
+                }
+            });
         } else {
             alert("no such hash ;p");
             location.href = "http://"+location.host;
-        }
-
-
-        var isLoggedIn = (err == null);
-        if (isLoggedIn) {
-            render_chat();
-        } else {
         }
     });
 
