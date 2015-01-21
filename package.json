@@ -1,0 +1,28 @@
+{
+  "name": "onigiri_bugyo",
+  "descrption": "onigiri order system",
+  "version": "0.0.1",
+  "author" : {
+    "name" : "Technical Rockstars"
+  },
+  "private": true,
+  "scripts": {
+    "start": "gulp"
+  },
+  "engines":{
+    "node" : ">=0.10.*"
+  },
+  "main" : "js/index.js",
+  "dependencies": {
+    "gulp" : "*",
+    "gulp-connect" : "*"
+  },
+  "devDependencies" : {
+      "supertest" : "*",
+      "mocha" : "*",
+      "q" : "*",
+      "chai" : "*",
+      "gulp" : "*",
+      "gulp-connect" : "*"
+  }
+}
