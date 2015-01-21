@@ -4,27 +4,32 @@
     var ds_members = milkcocoa.dataStore("members");
     var ds_orders = milkcocoa.dataStore("orders");
 
+    // おにぎりの具ボタンの表示について考える
+    // たけのしんがおにぎりの具を管理できたら良い
+    var onigiri_shio = "<img src='' class=''>";
+    $(".container--body--onigiri--shio").append(onigiri_shio);
+
+    // おにぎり選ぶボタン
+    $(".container--body--onigiri--shio").click(function(e){
+        // クリックしたcurrent_userは、ordersデータストアの自分の欄におにぎりが追加される
+        // ordersはmembersを持ち、orders-membersはおにぎりを持つ。おにぎりは種類を持つ。
+        ds_orders.push({ user_id : each_user.fbid, ingredient_id : 1 });
+    });
+
+    // ordersを削除するタイミングについて考える
+    // fbに投稿するボタンについて考える
+
     // ユーザー一覧生成
     ds_members.query({}).done(function(users){
         for(i=0; i++; i < users.length){
             var each_user = users[i];
-            var prp_cls = "container--body--proposals";
+            var prp_cls = "container--body--orders--member";
             var base_cls = prp_cls + "--" + each_user.fbid;
 
-            // おにぎりの具ボタンの表示について考える
-            // おにぎりの値段について考える
-            // おにぎりの合計個数について考える
-            // ordersを削除するタイミングについて考える
-            // fbに投稿するボタンについて考える
-
             // メンバー表示
-            // 注文四tあおにぎりを表示する描画系が必要
+            // 注文したおにぎりを表示する描画系が必要
+            // ordersデータストアの中からその人が頼んだおにぎりの個数を調べて表示する
             $("."+prp_cls).append("<p class='"+base_cls+"'>" + each_user.name + "</p>");
-
-            // おにぎり選ぶボタン
-            $(".onigiri1").click(function(e){
-                ds_orders.push({ user_id : each_user.fbid, ingredient_id : 1 });
-            });
 
             // 注文消すボタン
             $("."+ng_cls).click(function(e){
