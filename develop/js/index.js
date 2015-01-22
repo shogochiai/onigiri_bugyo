@@ -20,10 +20,11 @@
     // fbに投稿するボタンについて考える
 
     // ユーザー一覧生成
+    // いまメンバーがいないからなんかfor文の中が動作してない
     ds_members.query({}).done(function(users){
         for(i=0; i++; i < users.length){
             var each_user = users[i];
-            var prp_cls = "container--body--orders--member";
+            var prp_cls = "container--body--orders--members";
             var base_cls = prp_cls + "--" + each_user.fbid;
 
             // メンバー表示
