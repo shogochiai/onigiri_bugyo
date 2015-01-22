@@ -16,6 +16,7 @@
         ds_orders.push({ user_id : each_user.fbid, ingredient_id : 1 });
     });
 
+
     // ordersを削除するタイミングについて考える
     // fbに投稿するボタンについて考える
 

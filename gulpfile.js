@@ -9,8 +9,13 @@ minifyHTML = require('gulp-minify-html'),
 minifyCSS = require('gulp-minify-css'),
 rename = require("gulp-rename"),
 uglify = require('gulp-uglify'),
-rev = require('gulp-rev');
-usemin = require('gulp-usemin');
+rev = require('gulp-rev'),
+usemin = require('gulp-usemin'),
+gutil = require('gulp-util'),
+rimraf = require('rimraf'),
+revOutdated = require('gulp-rev-outdated'),
+path = require('path'),
+through = require('through2');
 
 gulp.task('webserver', function() {
   return connect.server({
@@ -21,36 +26,10 @@ gulp.task('webserver', function() {
 });
 
 gulp.task('watch',function(){
-    gulp.watch("develop/js/**/*.js",["js-task"]);
-    gulp.watch("develop/lib/**/*.js",["js-lib-task"]);
-    gulp.watch("develop/css/**/*.css",["css-task"]);
+    gulp.watch("develop/js/**/*.js",["usemin"]);
+    gulp.watch("develop/lib/**/*.js",["usemin"]);
+    gulp.watch("develop/css/**/*.css",["usemin"]);
     return gulp.watch("develop/html/*.html",["usemin"]);
-});
-
-gulp.task("js-task", function(){
-    return gulp.src("develop/js/**/*.js")
-    .pipe(plumber())
-    .pipe(uglify())
-    .pipe(rename({suffix: '.min'}))
-    .pipe(gulp.dest("release/js"))
-    .pipe(connect.reload());
-});
-
-gulp.task("js-lib-task",function(){
-  return gulp.src("develop/lib/**/*.js")
-    .pipe(plumber())
-    .pipe(gulp.dest("release/js"))
-    .pipe(connect.reload());
-});
-
-gulp.task("css-task", function(){
-    return gulp.src("develop/css/**/*.css")
-    .pipe(plumber())
-    .pipe(cmq())
-    .pipe(prefix())
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(gulp.dest("release/cssmin"))
-    .pipe(connect.reload());
 });
 
 gulp.task("pic-task",function(){
@@ -59,30 +38,35 @@ gulp.task("pic-task",function(){
     .pipe(connect.reload());
 })
 
-gulp.task('usemin', ["js-task"], function() {
+gulp.task('usemin', function() {
   return gulp.src('develop/html/*.html')
     .pipe(usemin({
         html: [minifyHTML({empty: true})],
-        css: [minifyCSS(), 'concat'],
+        css: [minifyCSS(), 'concat', rev()],
         js:[uglify(), rev()]
     }))
-    .pipe(gulp.dest('release/'));
+    .pipe(gulp.dest('release/'))
+    .pipe(connect.reload());
 });
 
-gulp.task('default',
-    [
-        'all',
-        'webserver',
-        'watch'
-    ]
-);
+gulp.task('clean', function() {
+    gulp.src( ['release/**/*.*'], {read: false})
+        .pipe( revOutdated(2) )
+        .pipe( cleaner() );
+    return;
+});
 
-gulp.task('all',
-    [
-        'css-task',
-        'js-task',
-        'js-lib-task',
-        'pic-task',
-        'usemin'
-    ]
-);
+gulp.task('default', ['all', 'webserver', 'watch']);
+gulp.task('all', ['pic-task', 'usemin', 'clean']);
+
+function cleaner() {
+    return through.obj(function(file, enc, cb){
+        rimraf( path.resolve( (file.cwd || process.cwd()), file.path), function (err) {
+            if (err) {
+                this.emit('error', new gutil.PluginError('Cleanup old files', err));
+            }
+            this.push(file);
+            cb();
+        }.bind(this));
+    });
+}

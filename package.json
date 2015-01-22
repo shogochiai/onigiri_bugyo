@@ -27,7 +27,12 @@
     "gulp-uglify": "~0.3.1",
     "gulp-rev": "*",
     "gulp-usemin": "*",
-    "gulp-minify-html": "*"
+    "gulp-minify-html": "*",
+    "gulp-util" : "*",
+    "rimraf" : "*",
+    "gulp-rev-outdated" : "*",
+    "path" : "*",
+    "through2" : "*"
   },
   "devDependencies": {
       "supertest" : "*",
