@@ -6,16 +6,8 @@
 
     // おにぎりの具ボタンの表示について考える
     // たけのしんがおにぎりの具を管理できたら良い
-    var onigiri_shio = "<img src='' class=''>";
+    var onigiri_shio = "<img src='pic/onigiri.gif' class='container--body--onigiri--shio--img'>";
     $(".container--body--onigiri--shio").append(onigiri_shio);
-
-    // おにぎり選ぶボタン
-    $(".container--body--onigiri--shio").click(function(e){
-        // クリックしたcurrent_userは、ordersデータストアの自分の欄におにぎりが追加される
-        // ordersはmembersを持ち、orders-membersはおにぎりを持つ。おにぎりは種類を持つ。
-        ds_orders.push({ user_id : each_user.fbid, ingredient_id : 1 });
-    });
-
 
     // ordersを削除するタイミングについて考える
     // fbに投稿するボタンについて考える
@@ -23,7 +15,7 @@
     // ユーザー一覧生成
     // いまメンバーがいないからなんかfor文の中が動作してない
     ds_members.query({}).done(function(users){
-        for(i=0; i++; i < users.length){
+        for(var i = 0; i < users.length; i++){
             var each_user = users[i];
             var prp_cls = "container--body--orders--members";
             var base_cls = prp_cls + "--" + each_user.fbid;
@@ -33,12 +25,23 @@
             // ordersデータストアの中からその人が頼んだおにぎりの個数を調べて表示する
             $("."+prp_cls).append("<p class='"+base_cls+"'>" + each_user.name + "</p>");
 
-            // 注文消すボタン
-            $("."+ng_cls).click(function(e){
-                ds_proposals.query({fbid: each_user.fbid}).done(function(target){
-                    ds_proposals.remove(target.id);
-                    $("."+base_cls).hide();
-                });
+            // 注文表示ボタン
+            // user_idを元にordersDSに検索をかけて描画する。おにぎりマークのクラスにおにぎりidを持たせる。
+            ds_orders.query({user_id: each_user.fbid}).done(function(targets){
+                for(var j = 0; j < targets.length; j++){
+                    var target = targets[j];
+                    var order_id = target.id;
+                    var order_cls = base_cls + "--" + order_id;
+                    var order_img_dom = "<img src='pic/onigiri.gif' width='50px' class='"+order_cls+"'>"
+                    $("."+base_cls).append(order_img_dom);
+                    // 注文消すボタン
+                    // おにぎりidつきクラスで指定して、idを元に削除する
+                    $("."+order_cls).click(function(e){
+                        ds_orders.remove(order_id);
+                        $("."+order_cls).hide(); //これはon関数で皆に反映させるべき
+                        // 何故か更新処理が起きてる？
+                    });
+                }
             });
         }
     });
@@ -60,7 +63,7 @@
                 // 申請中でもなくメンバーでもなければ、申請する
                 ds_proposals.query({fbid:user.id}).done(function(target_proposal){
                     ds_members.query({fbid:user.id}).done(function(target_menber){
-                        var not_exists = !(target_proposal || target_menber);
+                        var not_exists = !(target_proposal.first || target_menber.first);
                         if (not_exists) {
                             ds_proposals.push({fbid:user.id,name:user.name, date: new Date()});
                             alert("Sent onigiri member proposal :)");
@@ -137,13 +140,25 @@
                     // fbに投稿するボタンについて考える
                     render_accept_mode();
                 });
+                // オーダー初期化関数を考える
             } else {
               location.href = "http://"+location.host;
             }
         } else if (mode == "") {
-            ds_members.query({fbid:current_user.id}).done(function(target){
+            // current_userがmembersに含まれていたら許可
+            ds_members.query({fbid:current_user.id}).done(function(targets){
+                var target = targets[0];
                 if(target){
+                    $(".container--body--onigiri--shio").click(function(e){
+                        // クリックしたcurrent_userは、ordersデータストアの自分の欄におにぎりが追加される
+                        // ordersはmembersを持ち、orders-membersはおにぎりを持つ。おにぎりは種類を持つ。
+                        ds_orders.push({ user_id : target.fbid, user_name: target.name, ingredient_id : 1 });
+                    });
                     // おにぎりを注文できる処理
+                } else {
+                    $(".container--body--onigiri--shio").click(function(e){
+                        alert("Member only, Sir :)");
+                    });
                 }
             });
         } else {
@@ -152,6 +167,15 @@
         }
     });
 
+
+
+    /* 受動的な関数を集めておく */
+
+    ds_orders.on("push", function(order){
+        alert("accept "+order.value.user_name+"'s order!")
+        // member欄に注文個数を描画して、削除ボタンを生成する
+        // 単体削除関数を作成する
+    });
 
     $(window).on('hashchange', function(){
       location.reload();
