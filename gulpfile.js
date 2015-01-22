@@ -26,6 +26,7 @@ gulp.task('webserver', function() {
 });
 
 gulp.task('watch',function(){
+    gulp.watch("release/**/*.*",["clean"]);
     gulp.watch("develop/js/**/*.js",["usemin"]);
     gulp.watch("develop/lib/**/*.js",["usemin"]);
     gulp.watch("develop/css/**/*.css",["usemin"]);
