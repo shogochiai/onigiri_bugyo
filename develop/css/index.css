@@ -19,6 +19,7 @@
 .container--body--orders {
     margin : 0 auto;
     margin-bottom : 100px;
+    width : 700px;
 }
 
 .container--body--menu {

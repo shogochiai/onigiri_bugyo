@@ -9,8 +9,11 @@
     var ingredient_names = ["shio", "shake", "asari", "mentai", "ume"];
     var $ordernum_html = $("#ordernum");
     var $container_header = $(".container--header");
-     var seller_name = "Takenoshin Tokutsu";
-    // var seller_name = "Shogo Ochiai";
+    var $menu = $(".container--body--menu");
+    var $orders = $(".container--body--orders");
+
+    // var seller_name = "Takenoshin Tokutsu";
+    var seller_name = "Shogo Ochiai";
     var admin_name = "Shogo Ochiai";
 
 
@@ -35,8 +38,10 @@
 
 
     // たけのしんがおにぎりの具を管理できたら良い
+    $menu.append("<h2>メニュー</h2>");
+    $orders.prepend("<h2>オーダー</h2>");
     for(var i = 0; i < ingredient_names.length; i++){
-        $(".container--body--menu").append("<img src='pic/"+ingredient_names[i]+".png' width='180px' id='"+ingredient_names[i]+"'>");
+        $menu.append("<img src='pic/"+ingredient_names[i]+".png' width='180px' id='"+ingredient_names[i]+"'>");
     }
 
     // ユーザー一覧生成
@@ -277,7 +282,7 @@
     }
     function set_accept_btn (cb) {
         // cbにはset_quit_accept_btnが入る
-        $(".container--header").append("<button class='btn btn-danger pull-right' id='accept'><i class='fa fa-jpy container--header--accept_icon'></i>accept onigiri!</button>");
+        $container_header.append("<button class='btn btn-danger pull-right' id='accept'><i class='fa fa-jpy container--header--accept_icon'></i>受注する</button>");
         $("#accept").click(function(e){
             change_accept_mode(true);
             $("#accept").remove();
@@ -290,14 +295,19 @@
 
     function set_quit_accept_btn (cb) {
         // cbにはset_accept_btnが入る
-        $(".container--header").append("<button class='btn btn-primary pull-right' id='quit_accept'><i class='fa fa-jpy container--header--accept_icon'></i>accept onigiri!</button>");
-        $("#quit_accept").click(function(e){
+        $container_header.append("<button class='btn btn-primary pull-right' id='quit_accept'><i class='fa fa-jpy container--header--accept_icon'></i>受注解除する</button>");
+        $container_header.append("<button class='btn btn-large btn-danger pull-right' id='reset_orders'>オーダーを初期化する</button>");
+        $("#quit_accept").click(function(){
             change_accept_mode(false);
             $("#quit_accept").remove();
+            $("#reset_orders").remove();
 
             if(cb!=null){
                 cb();
             }
+        });
+        $("#reset_orders").click(function(){
+            reset_orders();
         });
     }
 
@@ -332,6 +342,14 @@
                         alert("You cannot erase other person's onigiri :(");
                     }
                 });
+            });
+        });
+    }
+
+    function reset_orders(){
+        ds_orders.query({}).done(function(orders){
+            orders.forEach(function(order){
+                ds_orders.remove(order.id);
             });
         });
     }
