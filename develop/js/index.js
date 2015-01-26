@@ -7,9 +7,10 @@
 
     var prp_cls = "container--body--orders--members";
     var ingredient_names = ["shio", "shake", "asari", "mentai", "ume"];
-    var ordernum_html = $("#ordernum");
-    // var seller_name = "Takenoshin Tokutsu";
-    var seller_name = "Shogo Ochiai";
+    var $ordernum_html = $("#ordernum");
+    var $container_header = $(".container--header");
+     var seller_name = "Takenoshin Tokutsu";
+    // var seller_name = "Shogo Ochiai";
     var admin_name = "Shogo Ochiai";
 
 
@@ -20,6 +21,14 @@
     // おにぎり総数の初期化
     sync_ordernum();
 
+    isAccept(function(bool){
+        if(bool){
+            $container_header.append("<h1 class='container--body--accept_mode' id='accept_state'>配達中だよ！</h1>");
+            $container_header.append("<p>オーダーは変更できません。もし何かあったらチャットでやりとりしてね。</p>");
+        } else {
+            $container_header.append("<h3 class='container--body--accept_mode' id='accept_state'>注文受付中だよ！</h1>");
+        }
+    });
 
     // ordersを削除するタイミングについて考える
     // fbに投稿するボタンについて考える
@@ -140,7 +149,11 @@
 
                         // 承認
                         $("."+ok_cls).click(function(e){
-                            ds_proposals.query({fbid: each_user.fbid}).done(function(targets){
+                            var user_id_seed = $(this).parent().attr("class");
+                            var reg = new RegExp(prp_cls + "--");
+                            var user_id = user_id_seed.replace(reg, "");
+
+                            ds_proposals.query({fbid: user_id}).done(function(targets){
                                 var target = targets[0];
                                 ds_members.push({ fbid : target.fbid, name : target.name });
                                 ds_proposals.remove(target.id);
@@ -150,7 +163,11 @@
 
                         // 拒否
                         $("."+ng_cls).click(function(e){
-                            ds_proposals.query({fbid: each_user.fbid}).done(function(targets){
+                            var user_id_seed = $(this).parent().attr("class");
+                            var reg = new RegExp(prp_cls + "--");
+                            var user_id = user_id_seed.replace(reg, "");
+
+                            ds_proposals.query({fbid: user_id}).done(function(targets){
                                 ds_proposals.remove(targets[0].id);
                                 location.reload();
                             });
@@ -181,27 +198,26 @@
 
         // 一般ユーザーモード
         } else if (mode == "") {
-            accept_filter(function(){
-                // current_userがmembersに含まれていたら許可
-                ds_members.query({fbid:current_user.id}).done(function(targets){
-                    var target = targets[0];
-                    if(target){
-
-                        // おにぎりを注文できる処理
-                        for ( var k = 0; k < ingredient_names.length; k++){
-                            $("#"+ingredient_names[k]).click(function(){
-                                var ingredient_name = $(this).attr("id");
+            // current_userがmembersに含まれていたら許可
+            ds_members.query({fbid:current_user.id}).done(function(targets){
+                var target = targets[0];
+                if(target){
+                    // おにぎりを注文できる処理
+                    for ( var k = 0; k < ingredient_names.length; k++){
+                        $("#"+ingredient_names[k]).click(function(){
+                            var ingredient_name = $(this).attr("id");
+                            accept_filter(function(){
                                 ds_orders.push({ user_id : target.fbid, user_name: target.name, ingredient_name : ingredient_name });
                             });
-                        }
-                    } else {
-                        for ( var k = 0; k < ingredient_names.length; k++){
-                            $("#"+ingredient_names[k]).click(function(){
-                                alert("Member only, Sir :)");
-                            });
-                        }
+                        });
                     }
-                });
+                } else {
+                    for ( var k = 0; k < ingredient_names.length; k++){
+                        $("#"+ingredient_names[k]).click(function(){
+                            alert("Member only, Sir :)");
+                        });
+                    }
+                }
             });
         } else {
             alert("no such hash ;p");
@@ -236,11 +252,7 @@
     });
 
     ds_accept.on("set", function(e){
-        if (e.state) {
-            $(".container--header").append("<h1 class='container--body--accept_mode' id='accept_state'>accept mode!</h1>");
-        } else {
-            $("#accept_state").remove();
-        }
+        location.reload();
     });
 
 
@@ -256,6 +268,7 @@
         ds_accept.get("accept", function(e){
             if(e.state){
                 // acceptモードでは処理を許さない
+                console.error("order was fixed.");
                 return ;
             } else {
                 cb();
@@ -280,6 +293,7 @@
         $(".container--header").append("<button class='btn btn-primary pull-right' id='quit_accept'><i class='fa fa-jpy container--header--accept_icon'></i>accept onigiri!</button>");
         $("#quit_accept").click(function(e){
             change_accept_mode(false);
+            $("#quit_accept").remove();
 
             if(cb!=null){
                 cb();
@@ -300,7 +314,7 @@
     // 総数監視
     function sync_ordernum(){
         ds_orders.query({}).done(function(orders){
-            ordernum_html.html(orders.length);
+            $ordernum_html.html(orders.length);
         });
     }
 
@@ -310,12 +324,14 @@
             var reg = new RegExp(prp_cls + "--");
             var user_id = user_id_seed.replace(reg, "");
             var clicked_id = $(this).attr("class");
-            milkcocoa.getCurrentUser(function(err, current_user){
-                if (user_id == current_user.id){
-                    ds_orders.remove(clicked_id);
-                } else {
-                    alert("You cannot erase other person's onigiri :(");
-                }
+            accept_filter(function(){
+                milkcocoa.getCurrentUser(function(err, current_user){
+                    if (user_id == current_user.id){
+                        ds_orders.remove(clicked_id);
+                    } else {
+                        alert("You cannot erase other person's onigiri :(");
+                    }
+                });
             });
         });
     }
