@@ -109,6 +109,7 @@
             if(isShogo){
                 alert("Shogo mode :)");
                 ds_proposals.query({}).done(function(users){
+                    console.log(users);
                     for(i=0; i++; i < users.length){
                         var each_user = users[i];
                         var prp_cls = "container--body--proposals";
